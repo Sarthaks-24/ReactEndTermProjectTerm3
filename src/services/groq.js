@@ -1,5 +1,5 @@
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY
-const MODEL_NAME = import.meta.env.VITE_GROQ_MODEL ?? 'llama-3.3-70b-versatile'
+const MODEL_NAME = import.meta.env.VITE_GROQ_MODEL
 const MAX_RESUME_CHARS = 12000
 
 function clampResumeText(resumeText) {
@@ -88,6 +88,10 @@ function buildGroqRequestBody(prompt) {
 }
 
 async function requestGroqAnalysis(prompt) {
+  if (!MODEL_NAME) {
+    throw new Error('Groq model is not configured. Please set VITE_GROQ_MODEL.')
+  }
+
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -120,7 +124,7 @@ export async function analyzeResumeWithAI({ resumeText, targetRole }) {
     throw new Error('Resume text is empty. Please upload a valid PDF.')
   }
 
-  if (!GROQ_API_KEY) {
+  if (!GROQ_API_KEY || !MODEL_NAME) {
     return fallbackAnalysis(text, role)
   }
 
