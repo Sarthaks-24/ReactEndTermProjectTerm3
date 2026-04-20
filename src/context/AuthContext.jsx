@@ -30,6 +30,16 @@ function createLocalUser(email = 'demo@local.dev') {
   }
 }
 
+function normalizeAuthError(error) {
+  if (error?.code === 'auth/unauthorized-domain') {
+    return new Error(
+      'Firebase Auth rejected this domain. Add your Netlify domain to Firebase Console > Authentication > Settings > Authorized domains, then redeploy.',
+    )
+  }
+
+  return error
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     if (isFirebaseEnabled) return null
@@ -52,44 +62,56 @@ export function AuthProvider({ children }) {
   }, [])
 
   const signup = async (email, password) => {
-    if (isFirebaseEnabled && auth) {
-      const credential = await createUserWithEmailAndPassword(auth, email, password)
-      return normalizeUser(credential.user)
-    }
+    try {
+      if (isFirebaseEnabled && auth) {
+        const credential = await createUserWithEmailAndPassword(auth, email, password)
+        return normalizeUser(credential.user)
+      }
 
-    const nextUser = createLocalUser(email)
-    localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(nextUser))
-    setUser(nextUser)
-    return nextUser
+      const nextUser = createLocalUser(email)
+      localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(nextUser))
+      setUser(nextUser)
+      return nextUser
+    } catch (error) {
+      throw normalizeAuthError(error)
+    }
   }
 
   const login = async (email, password) => {
-    if (isFirebaseEnabled && auth) {
-      const credential = await signInWithEmailAndPassword(auth, email, password)
-      return normalizeUser(credential.user)
-    }
+    try {
+      if (isFirebaseEnabled && auth) {
+        const credential = await signInWithEmailAndPassword(auth, email, password)
+        return normalizeUser(credential.user)
+      }
 
-    if (!password?.trim()) {
-      throw new Error('Password is required in demo mode.')
-    }
+      if (!password?.trim()) {
+        throw new Error('Password is required in demo mode.')
+      }
 
-    const nextUser = createLocalUser(email)
-    localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(nextUser))
-    setUser(nextUser)
-    return nextUser
+      const nextUser = createLocalUser(email)
+      localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(nextUser))
+      setUser(nextUser)
+      return nextUser
+    } catch (error) {
+      throw normalizeAuthError(error)
+    }
   }
 
   const loginWithGoogle = async () => {
-    if (isFirebaseEnabled && auth) {
-      const provider = new GoogleAuthProvider()
-      const credential = await signInWithPopup(auth, provider)
-      return normalizeUser(credential.user)
-    }
+    try {
+      if (isFirebaseEnabled && auth) {
+        const provider = new GoogleAuthProvider()
+        const credential = await signInWithPopup(auth, provider)
+        return normalizeUser(credential.user)
+      }
 
-    const nextUser = createLocalUser('google-demo@local.dev')
-    localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(nextUser))
-    setUser(nextUser)
-    return nextUser
+      const nextUser = createLocalUser('google-demo@local.dev')
+      localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(nextUser))
+      setUser(nextUser)
+      return nextUser
+    } catch (error) {
+      throw normalizeAuthError(error)
+    }
   }
 
   const logout = async () => {

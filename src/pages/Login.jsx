@@ -30,6 +30,18 @@ export default function Login() {
     }
   }
 
+  const handleGoogleLogin = async () => {
+    setError('')
+    setIsSubmitting(true)
+    try {
+      await loginWithGoogle()
+    } catch (err) {
+      setError(err.message || 'Authentication failed.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <div className="grid min-h-screen place-items-center px-4 py-10">
       <section className="card-shell w-full max-w-md animate-rise rounded-3xl p-6 sm:p-8">
@@ -80,10 +92,11 @@ export default function Login() {
 
         <button
           className="mt-3 w-full rounded-xl border border-foam/35 bg-foam/10 px-4 py-3 font-semibold text-foam transition hover:bg-foam/20"
-          onClick={loginWithGoogle}
+          onClick={handleGoogleLogin}
+          disabled={isSubmitting}
           type="button"
         >
-          Continue with Google
+          {isSubmitting ? 'Please wait...' : 'Continue with Google'}
         </button>
 
         <p className="mt-4 text-sm text-slate-300">
